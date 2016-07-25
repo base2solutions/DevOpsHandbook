@@ -1,4 +1,4 @@
-# DevOps Expectation at Base2s
+# DevOps Expectations at Base2s
 
 ## Purpose
 This document is to help you be successful as a DevOps team member to deliver quality code to the customer and set clear expectations.  
