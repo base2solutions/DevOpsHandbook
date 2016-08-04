@@ -4,10 +4,10 @@
 ### Deploy Jenkins via Packer:  
  * Install [Packer](https://www.packer.io/downloads.html)  
  * Clone DevOps repository:  
- >     git clone git@github.com:base2solutions/DevOps.git
+ >     git clone path/to/github/devops/repo
  * Change directory to the location of the packer template:  
  * Start Packer Build process:  
- >     packer build baseJenkinsECS.json  
+ >     packer build path/to/json/template  
  * Once the build process has been completed, sign into Amazon AWS Console> Click on Services and click EC2  
  * On EC2:  
    * Under Images, click AMIs  
@@ -19,13 +19,13 @@
  * On AWS, click on Services > click Route 53 > click on Hosted zones  
  * In Hosted zones:  
    * Click Create Hosted Zone and enter the following:  
-     * Domain name: barbuild.base2d.com  
-     * Comment: internal VPC for dual  
+     * Domain name: jenkins/domain/name  
+     * Comment: some/comment/here  
      * Type: Public Hosted Zone  
      * Click Create  
  * In Hosted zones, select the previously created zone > click Create Record Set  
      * In Create Record Set pane, enter:  
-     * Name: barbuild.base2d.com  
+     * Name: jenkins/domain/name  
      * Value: enter the private ip of the newly created Jenkins instance  
      * Click Create  
 
@@ -40,13 +40,13 @@
  * Generate letsencrypt certificate:  
  >     sudo wget https://dl.eff.org/certbot-auto  
  >     sudo chmod a+x certbot-auto  
- >     sudo ./certbot-auto certonly --standalone -d barbuild.base2d.com  
+ >     sudo ./certbot-auto certonly --standalone -d jenkins/domain/name  
 
 #### Set Jenkins SSL certs in Jenkins config file:  
  * modify /etc/nginx/conf.d/jenkins.conf file as follow:  
    * Add:  
-   >     ssl_certificate           /etc/letsencrypt/live/barbuild.base2d.com/fullchain.pem;  
-   >     ssl_certificate_key       /etc/letsencrypt/live/barbuild.base2d.com/privkey.pem;  
+   >     ssl_certificate           /etc/letsencrypt/live/jenkins_domain_name/fullchain.pem;  
+   >     ssl_certificate_key       /etc/letsencrypt/live/jenkins_domain_name/privkey.pem;  
    >     ssl on;  
    * Comment out:  
    >     #  ssl_certificate           /etc/nginx/cert.crt;  
@@ -56,7 +56,7 @@
  >     sudo service nginx start  
 
 #### Jenkins First Step   
- * Using a web browser, navigate to [https://barbuild.base2d.com.](https://barbuild.base2d.com])  
+ * Using a web browser, navigate to jenkins/domain/name  
  * Log in using the password created in `/var/lib/jenkins/secrets/initialAdminPassword`  
  * Select to install most recommended plugins  
  * Lastly, create a local admin account  
@@ -86,7 +86,7 @@
  * Under Authorization > select GitHub Committer Authorization Strategy  
  * Under GitHub Authorization Settings > enter the following:  
  >     Admin User names: enter names of administrators  
- >     Participant in Organization: base2solutions  
+ >     Participant in Organization: enter organization name here  
  >     Use GitHub repository permissions: yes  
  * Click Save  
  **NOTE**: Client ID and secret needs to be generate beforehand on GitHub - OAuth applications  
@@ -100,10 +100,10 @@
  * Under Cloud > click on Add a new cloud > select Amazon EC2 Container Service Cloud > enter the following:  
  >     Name: name_of_ecs_cloud
  >     Amazon ECS Credentials: select service account with access permission to ECS cluster  
- >     Amazon ECS Region Name: select us-west-2  
- >     Click Advanced > In Alternative Jenkins URL > enter https://barbuild.base2d.com  
+ >     Amazon ECS Region Name: select region where the ECS cluster is located  
+ >     Click Advanced > In Alternative Jenkins URL > enter "jenkins/domain/name" here  
  * Locate ECS slave templates > click Add > Enter the following:  
- >     Label: buildslave  
+ >     Label: enter name which will be used to reference to this slave  
  >     Docker Image: enter docker image address retrieved from ECS
  >     Filesystem root: /home/jenkins  
  >     Memory: 1024  
@@ -114,10 +114,10 @@
 <br />
 ### Configure GitHub and Amazon AWS credentials:
 #### GitHub - Repository webhook  
- * Log into GitHub at https://github.com > navigate to base2solutions/777x.dual repo > click Settings  
+ * Log into GitHub at https://github.com > navigate to organization/repository > click Settings  
  * Click Webhooks & services  
  * Click Add webhook > Select Jenkins (GitHub plugin) > Enter the following:  
-   * Payload URL: https://barbuild.base2d.com/ghprbhook/  
+   * Payload URL: jenkins/domain/name/ghprbhook/  
    * Content type: application/x-www-form-urlencoded  
    * Which events would you like to trigger this webhook? > select `Let me select individual events` and tick the following options:  
    >     Pull request  
@@ -127,15 +127,18 @@
  *Click Add webhook  
 
 #### GitHub - OAuth Applications  
- * Log into GitHub at https://github.com > navigate to base2solutions > click Settings  
+ * Log into GitHub at https://github.com > navigate to organization/name > click Settings  
  * Click on OAuth applications > Click on Register an application > Enter:  
- * Application name: barbuild jenkins github auth  
- * Homepage URL: https://barbuild.base2s.com  
+ * Application name: enter application name here  
+ * Homepage URL: jenkins/domain/name  
  * Application descriptions: some descriptions
- * Authorized callback URL: https://barbuild.base2s.com  
+ * Authorized callback URL: jenkins/domain/name or URL/where/user/access/Jenkins  
 
 #### AWS - IAM  
  * Sign into AWS Console > click Services > click IAM  
- * Click Users > select the service user such as `service.dualnfs`  
+ * Click Users > select the service user  
  * In `Security Credentials`, click on Create Access Key [use for AWS instance deployment]  
  * In Permissions tab, click Attach Policy > select the Policy you want to attach to this user account  
+ * Click Attach Policy  
+
+
