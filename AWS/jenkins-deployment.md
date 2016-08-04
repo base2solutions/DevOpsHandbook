@@ -8,7 +8,7 @@
  * Change directory to the location of the packer template:  
  * Start Packer Build process:  
  >     packer build baseJenkinsECS.json  
- * Once the build process has been completed, sign into [AWS Console](http://internal-base2.signin.aws.amazon.com/) > Click on Services and click EC2  
+ * Once the build process has been completed, sign into Amazon AWS Console> Click on Services and click EC2  
  * On EC2:  
    * Under Images, click AMIs  
    * Select the previously created Jenkins AMI and click Launch > launch the AMI to create the Jenkins instance.  
