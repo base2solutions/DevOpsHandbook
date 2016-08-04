@@ -1,0 +1,61 @@
+{
+    "variables": {
+	"aws_access_key": "",
+	"aws_secret_key": ""
+    },
+    "builders": [
+    {
+        "type": "amazon-ebs",
+	"access_key": "{{user `aws_access_key`}}",
+	"secret_key": "{{user `aws_secret_key`}}",
+	"ssh_timeout": "5m",
+	"ssh_pty": "true",
+	"ssh_username": "ec2-user",
+	"instance_type": "t2.micro",
+	"region": "us-west-2",
+	"source_ami": "ami-7172b611",
+	"subnet_id": "subnet-cd687594",
+	"vpc_id": "vpc-57d77533",
+	"security_group_id": "sg-73e9b315",
+	"associate_public_ip_address": "true",
+	"ami_virtualization_type": "hvm",
+	"ami_name": "777x.jenkins.{{isotime \"2006-01-02\"}}",
+	"ami_users": ["545335351178"],
+        "force_deregister": "true",
+	"ami_block_device_mappings": [
+		{
+			"device_name": "/dev/sda1",
+                        "volume_type": "gp2",
+                        "volume_size": 8,
+			"delete_on_termination": true    
+		}
+	],
+	"launch_block_device_mappings": [
+		{
+			"device_name": "/dev/sdb",
+			"volume_type": "gp2",
+			"volume_size": 20,
+			"delete_on_termination": true
+		}
+	],
+	"tags": {
+		"OS_Version": "Amazon Linux"
+		}
+    }
+    ],
+    "provisioners": [
+	{
+	    "type": "shell",
+	    "scripts": [
+		"{{template_dir}}/scripts/userNPermissions.sh",
+		"{{template_dir}}/scripts/jenkins.sh"
+	    ],
+	    "override": {
+		"amazon-ebs": {
+			"execute_command": "chmod +x {{ .Path }}; {{ .Vars }} sudo -E sh '{{ .Path }}'"
+		}
+	    }
+	}
+   ]
+}
+
