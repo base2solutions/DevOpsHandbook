@@ -4,7 +4,7 @@
 ### Deploy Jenkins via Packer:  
  * Install [Packer](https://www.packer.io/downloads.html)  
  * Log in to GitHub > navigate to [DualNFS Repo](https://github.com/base2solutions/777x.dual) > go into Packer directory and download the baseJenkinsECS.json template file.  
- * Donwload the script files used in by the template in the scripts folder.  
+ * Download the script files used in by the template in the scripts folder.  
  * Start Packer Build process:  
  >     packer build baseJenkinsECS.json  
  * Once the build process has been completed, sign into [AWS Console](http://internal-base2.signin.aws.amazon.com/) > Click on Services and click EC2  
@@ -97,13 +97,13 @@
  * Shared Secret: enter secret here  
  * Credentials: select github service account here  
  * Under Cloud > click on Add a new cloud > select Amazon EC2 Container Service Cloud > enter the following:  
- >     Name: ecs-build  
- >     Amazon ECS Credentials: select dualnfs service key  
+ >     Name: name_of_ecs_cloud
+ >     Amazon ECS Credentials: select service account with access permission to ECS cluster  
  >     Amazon ECS Region Name: select us-west-2  
  >     Click Advanced > In Alternative Jenkins URL > enter https://barbuild.base2d.com  
  * Locate ECS slave templates > click Add > Enter the following:  
  >     Label: buildslave  
- >     Docker Image: enter docker image address retrieved from ECS (545335351178.dkr.ecr.us-west-2.amazonaws.com/dualnfs/buildslave)  
+ >     Docker Image: enter docker image address retrieved from ECS
  >     Filesystem root: /home/jenkins  
  >     Memory: 1024  
  >     CPU units: 1  
