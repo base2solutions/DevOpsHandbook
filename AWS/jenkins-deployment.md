@@ -2,6 +2,7 @@
 
 <br />
 ### Deploy Jenkins via Packer:  
+#### Packer Build  
  * Install [Packer](https://www.packer.io/downloads.html)  
  * Clone DevOps repository:  
  >     git clone path/to/github/devops/repo
@@ -13,6 +14,64 @@
    * Under Images, click AMIs  
    * Select the previously created Jenkins AMI and click Launch > launch the AMI to create the Jenkins instance.  
 
+#### Packer Template  
+ * Basic layout of a packer template is as follow:  
+   * Builder: a set of components that create the initial base image  
+   >     Example:  
+   >         "builder": [  
+   >             {"type": "virtualbox-ovf",  
+   >              "source_path": "virtualbox/box.ovf",  
+   >              "ssh_username": "vagrant",  
+   >              "ssh_password": "vagrant",  
+   >              "shutdown_command": "echo 'packer' | sudo -S shutdown -P now"  
+   >             }]  
+   * Provisioners: plugins that can be attached to the initial base image to bring it to the desired state  
+   >     Example:  
+   >         "provisioners": [  
+   >             {"type": "shell",  
+   >              "inline": [  
+   >              "sudo mkdir /tm/vboxguest",  
+   >              "cd /tmp/vboxguest"  
+   >             }]
+   * Post-Processors: take provisioned image and convert it to the final usable artifact (vagrant box file)  
+   >     Example:  
+   >         "post-processors": [  
+   >             {"type": "vagrant",  
+   >              "output": "dummy.box"  
+   >             }],  
+ * For full list of available builders/provisioner/post-provisioner, check out [Packer Documentations](https://www.packer.io/docs). If what you are looking for is not found, it is likely available via Packer Plugins  
+ * There are two types of variables in Packer:  
+   * Global/built-in variables:  
+   * User variables
+ * The followings are examples of Global/built-in variables:  
+   * build_name - The name of the build being run.  
+   * build_type - The type of the builder being used currently.  
+   * isotime [FORMAT] - UTC time, which can be formatted.  
+   * lower - Lowercases the string.  
+   * pwd - The working directory while executing Packer.  
+   * template_dir - The directory to the template for the build.  
+   * timestamp - The current Unix timestamp in UTC.  
+   * uuid - Returns a random UUID.  
+   * upper - Uppercases the string.  
+     * Global variables could be called with {{ variable_name }}
+ * To use user variables in a Packer template, you have to define them first in the `variables` section:  
+ >     Example:  
+ >         "variables": {  
+ >             "ssh_username": "root",  
+ >             "ssh_password": "root"
+ >         }
+ * Once you define your variables in the `variables` section, you could then call them as follow with "{{user 'name_of_your_variables`}}"  
+ >     Example:  
+ >         "variables": {  
+ >         "my_username": "root",  
+ >         "my_password": "root"
+ >         },
+ >         "builders": [
+ >         {
+ >             "type": "virtualbox-iso",
+ >             "ssh_username": "{{user `my_username`}}",
+ >             "ssh_password": "{{user `my_password`}}"
+ >         }]
 <br/>
 ### Configure Jenkins:  
 #### Route 53  
