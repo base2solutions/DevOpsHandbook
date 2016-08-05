@@ -72,6 +72,7 @@
  >             "ssh_username": "{{user `my_username`}}",
  >             "ssh_password": "{{user `my_password`}}"
  >         }]
+
 <br/>
 ### Configure Jenkins:  
 #### Route 53  
@@ -82,11 +83,23 @@
      * Comment: some/comment/here  
      * Type: Public Hosted Zone  
      * Click Create  
- * In Hosted zones, select the previously created zone > click Create Record Set  
+   * In Hosted zones, select the previously created public zone > click Create Record Set  
+     * In Create Record Set pane, enter:  
+     * Name: jenkins/domain/name  
+     * Value: enter the public ip of the newly created Jenkins instance  
+     * Click Create  
+   * Click Create Hosted Zone again and enter the following:  
+     * Domain name: jenkins/domain/name  
+     * Comment: some/comment/here   
+     * Type: Private Hosted Zone for Amazon VPC  
+     * VPC ID: choose the Amazon VPC that you want to associated with the hosted zone  
+     * Click Create  
+   * In Hosted zones, select the previously created private zone > click Create Record Set  
      * In Create Record Set pane, enter:  
      * Name: jenkins/domain/name  
      * Value: enter the private ip of the newly created Jenkins instance  
      * Click Create  
+ * Public Hosted Zone will provide dns name resolution for your Jenkins when it is accessed via the internet. Private Hosted Zone will provide dns name resolutions for your Jenkins when it is accessed by other servers within the same Amazon VPC.  
 
 #### Nginx
  * SSH into the newly created Jenkins instance  
