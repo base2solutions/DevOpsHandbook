@@ -213,4 +213,156 @@
  * In Permissions tab, click Attach Policy > select the Policy you want to attach to this user account  
  * Click Attach Policy  
 
+<br />
+### Backup Jenkins Using AWS Lambda:
+#### Overview  
+ * To backup Jenkins using AWS Lambda, first we need to create a service role on AWS IAM. This will allow the service to handle EBS snapshot and perform instance backup and deletion of snapshots.  
+ * Next we use AWS lambda to create a function, run via Python, to perform the required instance backup tasks. Then we attach the backup IAM role to this function to execute the specify tasks.  
+
+#### Install and use AWS CLI:  
+ * AWS CLI install - Windows  
+   * Download the binary for Windows at - http://aws.amazon.com/cli/  
+ * AWS CLI install - Mac and Linux  
+   * Requires Python 2.6.5 or higher + PIP  
+   * Install via "pip install awscli"  
+   > OR  
+   * curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip"  
+   * unzip awscli-bundle.zip  
+   * sudo ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws  
+ * AWS Command structure:  
+   * aws <command> <subcommand> [options and parameters*]  
+
+#### AWS - IAM permissions:  
+ * Sign into Amazon > Click Services > Click IAM > Click Roles > Create New Role  
+   * Step 1: Set Role Name  
+     * In Role Name > enter "ebs-backup-worker"  
+     * Click Next Step  
+   * Step 2: Select Role Type  
+     * Under AWS Service Role > select AWS Lambda  
+     * Click Next Step  
+   * Step 3: Establish Trust will be skipped automatically  
+   * Step 4: Attach Policy  
+     * Under Attach Policy > attach the following policies:  
+     * AmazonEC2FullAccess  
+     * Click Next Step  
+   * Review and click Create Role  
+
+#### AWS - Lambda - Jenkins backup worker:
+ * Click Services > Click Lambda > Click Create a Lambda Function > Skip the Select Blueprint screen  
+ * In Configure triggers > click the dotted box and select CloudWatch Events - Schedule  
+   * Fill out the following fields:  
+   * Rule name: enter your rule name here  
+   * Rule description: enter your rule description here  
+   * Schedule expression: cron(00 02 ? * MON-FRI *)  
+   * Tick the Enable trigger box  
+   * Click Next  
+ * In Configure function > fill out the following:  
+   * Name: enter your function name  
+   * Description: enter your function description here  
+   * Runtime*: Python 2.7  
+   * Code entry type: Edit code inline  
+   * In the text box below, copy and paste lines below:  
+   >     import boto3  
+   >     import collections  
+   >     import datetime  
+   >     
+   >     ec = boto3.client('ec2')  
+   >     def lambda_handler(event, context):  
+   >     reservations = ec.describe_instances(  
+   >         Filters=[  
+   >             {'Name': 'tag-key', 'Values': ['Backup', 'backup']},  
+   >             {'Name': 'tag-value', 'Values': ['True','true']},  
+   >             ]  
+   >         ).get('Reservations', [])  
+   >         
+   >     instances = sum([  
+   >         [i for i in instance['Instances']]  
+   >         for instance in reservations
+   >         ], [])  
+   >         
+   >     print "Found %d instances that need backing up" % len(instances)  
+   >         
+   >     to_tag = collections.defaultdict(list)  
+   >         
+   >     for instance in instances:  
+   >         try:  
+   >             retention_days = [  
+   >                 int(t.get('Value')) for t in instance['Tags']  
+   >                 if t['Key'] == 'Retention'][0]  
+   >         except IndexError:  
+   >             retention_days = 5  
+   >         
+   >         for dev in instance['BlockDeviceMappings']:  
+   >             if dev.get('Ebs', None) is None:  
+   >                 continue  
+   >                 
+   >             vol_id = dev['Ebs']['VolumeId']  
+   >             print "Found EBS volume %s on instance %s" % (vol_id, instance['InstanceId'])  
+   >             snap = ec.create_snapshot(VolumeId=vol_id)  
+   >             
+   >             to_tag[retention_days].append(snap['SnapshotId'])  
+   >             
+   >             print "Retaining snapshot %s of volume %s from instance %s for %d days" % (  
+   >                 snap['SnapshotId'], vol_id, instance['InstanceId'], retention_days)  
+   >         
+   >         for retention_days in to_tag.keys():  
+   >             delete_date = datetime.date.today() + datetime.timedelta(days=retention_days)  
+   >             delete_fmt = delete_date.strftime('%Y-%m-%d')  
+   >             print "Will delete %d snapshots on %s" % (len(to_tag[retention_days]), delete_fmt)  
+   >             ec.create_tags(  
+   >                 Resources=to_tag[retention_days],  
+   >                 Tags=[{'Key': 'DeleteOn', 'Value': delete_fmt}]  
+   >                 )  
+   * Handler*: default is `lambda_function.lambda_handler  
+   * Role*: Choose an existing role  
+   * Existing role: ebs-backup-worker  
+   * Memory (MB)*: keep default or adjust as needed 
+   * Timeout*: keep default or adjust as needed  
+   * VPC: No VPC  
+   * Click Next  
+   * Review the function details and click Create function  
+   * Finally, click Test to test the new function  
+
+#### AWS - Lambda - Expired Jenkins snapshots remover:
+ * Click Services > Click Lambda > Click Create a Lambda Function > Skip the Select Blueprint screen  
+ * In Configure triggers > click the dotted box and select CloudWatch Events - Schedule  
+   * Fill out the following fields:  
+   * Rule name: enter your rule name here  
+   * Rule description: enter rule description  
+   * Schedule expression: cron(00 20 ? * MON-FRI *)  
+   * Tick the Enable trigger box  
+   * Click Next
+ * In Configure function > fill out the following:  
+   * Name: enter your function name here  
+   * Description: enter your function description here  
+   * Runtime*: Python 2.7  
+   * Code entry type: Edit code inline  
+   * In the text box below, copy and paste lines below:  
+   >     import boto3  
+   >     import re  
+   >     import datetime  
+   >     
+   >     ec = boto3.client('ec2')  
+   >     account_id = ['<aws_account_id_here>']  
+   >     def lambda_handler(event, context):  
+   >     delete_on = datetime.date.today().strftime('%Y-%m-%d')  
+   >     filters = [  
+   >         {'Name': 'tag-key', 'Values': ['DeleteOn']},  
+   >         {'Name': 'tag-value', 'Values': [delete_on]},  
+   >         ]  
+   >         
+   >     snapshot_response = ec.describe_snapshots(OwnerIds=account_id, Filters=filters)  
+   >     
+   >     for snap in snapshot_response['Snapshots']:  
+   >       print "Deleting snapshot %s" % snap['SnapshotId']  
+   >       ec.delete_snapshot(SnapshotId=snap['SnapshotId'])
+   * Handler*: default is `lambda_function.lambda_handler  
+   * Role*: Choose an existing role  
+   * Existing role: ebs-backup-worker  
+   * Memory (MB)*: keep default or adjust as needed 
+   * Timeout*: keep default or adjust as needed  
+   * VPC: No VPC  
+   * Click Next  
+  * Review the function details and click Create function  
+  * Finally, click Test to test the new function  
 
