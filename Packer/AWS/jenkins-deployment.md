@@ -262,57 +262,59 @@
    * Runtime*: Python 2.7  
    * Code entry type: Edit code inline  
    * In the text box below, copy and paste lines below:  
-   >     import boto3  
-   >     import collections  
-   >     import datetime  
-   >     
-   >     ec = boto3.client('ec2')  
-   >     def lambda_handler(event, context):  
-   >     reservations = ec.describe_instances(  
-   >         Filters=[  
-   >             {'Name': 'tag-key', 'Values': ['Backup', 'backup']},  
-   >             {'Name': 'tag-value', 'Values': ['True','true']},  
-   >             ]  
-   >         ).get('Reservations', [])  
-   >         
-   >     instances = sum([  
-   >         [i for i in instance['Instances']]  
-   >         for instance in reservations
-   >         ], [])  
-   >         
-   >     print "Found %d instances that need backing up" % len(instances)  
-   >         
-   >     to_tag = collections.defaultdict(list)  
-   >         
-   >     for instance in instances:  
-   >         try:  
-   >             retention_days = [  
-   >                 int(t.get('Value')) for t in instance['Tags']  
-   >                 if t['Key'] == 'Retention'][0]  
-   >         except IndexError:  
-   >             retention_days = 5  
-   >         
-   >         for dev in instance['BlockDeviceMappings']:  
-   >             if dev.get('Ebs', None) is None:  
-   >                 continue  
-   >                 
-   >             vol_id = dev['Ebs']['VolumeId']  
-   >             print "Found EBS volume %s on instance %s" % (vol_id, instance['InstanceId'])  
-   >             snap = ec.create_snapshot(VolumeId=vol_id)  
-   >             
-   >             to_tag[retention_days].append(snap['SnapshotId'])  
-   >             
-   >             print "Retaining snapshot %s of volume %s from instance %s for %d days" % (  
-   >                 snap['SnapshotId'], vol_id, instance['InstanceId'], retention_days)  
-   >         
-   >         for retention_days in to_tag.keys():  
-   >             delete_date = datetime.date.today() + datetime.timedelta(days=retention_days)  
-   >             delete_fmt = delete_date.strftime('%Y-%m-%d')  
-   >             print "Will delete %d snapshots on %s" % (len(to_tag[retention_days]), delete_fmt)  
-   >             ec.create_tags(  
-   >                 Resources=to_tag[retention_days],  
-   >                 Tags=[{'Key': 'DeleteOn', 'Value': delete_fmt}]  
-   >                 )  
+   ```python
+   import boto3
+   import collections
+   import datetime
+   
+   ec = boto3.client('ec2')
+   def lambda_handler(event, context):
+   reservations = ec.describe_instances(
+       Filters=[
+           {'Name': 'tag-key', 'Values': ['Backup', 'backup']},
+           {'Name': 'tag-value', 'Values': ['True','true']},
+           ]
+       ).get('Reservations', [])
+   
+   instances = sum([
+       [i for i in instance['Instances']]
+       for instance in reservations
+       ], [])
+   
+   print "Found %d instances that need backing up" % len(instances)
+   
+   to_tag = collections.defaultdict(list)
+   
+   for instance in instances:
+         try:
+             retention_days = [
+                 int(t.get('Value')) for t in instance['Tags']
+                if t['Key'] == 'Retention'][0]
+          except IndexError:
+              retention_days = 5
+          
+          for dev in instance['BlockDeviceMappings']:
+              if dev.get('Ebs', None) is None:
+                  continue
+                  
+              vol_id = dev['Ebs']['VolumeId']
+              print "Found EBS volume %s on instance %s" % (vol_id, instance['InstanceId'])
+              snap = ec.create_snapshot(VolumeId=vol_id)
+    
+              to_tag[retention_days].append(snap['SnapshotId'])
+              
+              print "Retaining snapshot %s of volume %s from instance %s for %d days" % (
+                  snap['SnapshotId'], vol_id, instance['InstanceId'], retention_days)
+    
+          for retention_days in to_tag.keys():
+              delete_date = datetime.date.today() + datetime.timedelta(days=retention_days)
+              delete_fmt = delete_date.strftime('%Y-%m-%d')
+              print "Will delete %d snapshots on %s" % (len(to_tag[retention_days]), delete_fmt)
+              ec.create_tags(
+                  Resources=to_tag[retention_days],
+                  Tags=[{'Key': 'DeleteOn', 'Value': delete_fmt}]
+                  )
+   ```
    * Handler*: default is `lambda_function.lambda_handler  
    * Role*: Choose an existing role  
    * Existing role: ebs-backup-worker  
@@ -338,24 +340,26 @@
    * Runtime*: Python 2.7  
    * Code entry type: Edit code inline  
    * In the text box below, copy and paste lines below:  
-   >     import boto3  
-   >     import re  
-   >     import datetime  
-   >     
-   >     ec = boto3.client('ec2')  
-   >     account_id = ['<aws_account_id_here>']  
-   >     def lambda_handler(event, context):  
-   >     delete_on = datetime.date.today().strftime('%Y-%m-%d')  
-   >     filters = [  
-   >         {'Name': 'tag-key', 'Values': ['DeleteOn']},  
-   >         {'Name': 'tag-value', 'Values': [delete_on]},  
-   >         ]  
-   >         
-   >     snapshot_response = ec.describe_snapshots(OwnerIds=account_id, Filters=filters)  
-   >     
-   >     for snap in snapshot_response['Snapshots']:  
-   >       print "Deleting snapshot %s" % snap['SnapshotId']  
-   >       ec.delete_snapshot(SnapshotId=snap['SnapshotId'])
+   ```python
+   import boto3
+   import re
+   import datetime
+   
+   ec = boto3.client('ec2')
+   account_id = ['<aws_account_id_here>']
+   def lambda_handler(event, context):
+   delete_on = datetime.date.today().strftime('%Y-%m-%d')
+       filters = [
+           {'Name': 'tag-key', 'Values': ['DeleteOn']},
+           {'Name': 'tag-value', 'Values': [delete_on]},
+           ]
+   
+       snapshot_response = ec.describe_snapshots(OwnerIds=account_id, Filters=filters)
+   
+       for snap in snapshot_response['Snapshots']:
+           print "Deleting snapshot %s" % snap['SnapshotId']
+           ec.delete_snapshot(SnapshotId=snap['SnapshotId'])
+   ```
    * Handler*: default is `lambda_function.lambda_handler  
    * Role*: Choose an existing role  
    * Existing role: ebs-backup-worker  
