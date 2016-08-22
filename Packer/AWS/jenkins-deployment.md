@@ -179,25 +179,22 @@
  * GitHub Service API URL: https://api.github.com  
  * Shared Secret: enter secret here  
  * Credentials: select github service account here  
- * Under Cloud > click on Add a new cloud > select Amazon EC2 Container Service Cloud > enter the following:
- ```
- Name: name_of_ecs_cloud
- Amazon ECS Credentials: select service account with access permission to ECS cluster  
- Amazon ECS Region Name: select region where the ECS cluster is located  
- lick Advanced > In Alternative Jenkins URL > enter "jenkins/domain/name" here
- ```
+ * Under Cloud > click on Add a new cloud > select Amazon EC2 Container Service Cloud > enter the following
+ >    Name: name_of_ecs_cloud
+ >    Amazon ECS Credentials: select service account with access permission to ECS cluster  
+ >    Amazon ECS Region Name: select region where the ECS cluster is located  
+ >    click Advanced > In Alternative Jenkins URL > enter "jenkins/domain/name" here
+
  * Locate ECS slave templates > click Add > Enter the following:  
- ```
- Label: enter name which will be used to reference to this slave  
- Docker Image: enter docker image address retrieved from ECS
- Filesystem root: /home/jenkins  
- Memory: 1024  
- CPU units: 1  
- ```
+ >    Label: enter name which will be used to reference to this slave  
+ >    Docker Image: enter docker image address retrieved from ECS
+ >    Filesystem root: /home/jenkins  
+ >    Memory: 1024  
+ >    CPU units: 1  
+
  * Click save  
  **NOTE**: Amazon ECS credentials must be created beforehand on AWS Console - IAM section
 
-<br />
 ### Configure GitHub and Amazon AWS credentials:
 #### GitHub - Repository webhook  
  * Log into GitHub at https://github.com > navigate to organization/repository > click Settings  
