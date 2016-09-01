@@ -33,10 +33,10 @@
         "force_deregister": "true",
 	"ami_block_device_mappings": [
 		{
-			"device_name": "/dev/sda1",
+			"device_name": "/dev/sdc",
                         "volume_type": "gp2",
                         "volume_size": 8,
-			"delete_on_termination": true    
+			"delete_on_termination": true
 		}
 	],
 	"launch_block_device_mappings": [
@@ -67,4 +67,3 @@
 	}
    ]
 }
-
