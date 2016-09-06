@@ -53,6 +53,11 @@
     }
     ],
     "provisioners": [
+  {
+      "type": "file",
+      "source": "{{template_dir}}/conf/",
+      "destination": "/tmp/jenkins.conf"
+  },
 	{
 	    "type": "shell",
 	    "scripts": [
