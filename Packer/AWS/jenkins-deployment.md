@@ -98,7 +98,7 @@ Export these keys and do `packer build path/to/baseJenkinsEC2.json` again.
       HTTPS             TCP                   443              0.0.0.0/0
 ```
 
-    * Outbound:
+      * Outbound:
 ```
      Type            Protocol            Port Range          Destination
      All traffic         All                All               0.0.0.0/0
@@ -108,7 +108,7 @@ Export these keys and do `packer build path/to/baseJenkinsEC2.json` again.
 
 ### Step 3: Configure Jenkins
 #### Route 53
-Utilize [Amazon Route 53](https://aws.amazon.com/route53/) to create Public and Private Hosted Zones. Public Hosted Zone will provide DNS name resolution for your Jenkins when it is accessed via the internet. Private Hosted Zone will provide dns name resolutions for your Jenkins when it is accessed by other servers within the same Amazon VPC.
+Use [Amazon Route 53](https://aws.amazon.com/route53/) to create Public and Private Hosted Zones. Public Hosted Zone will provide DNS name resolution for your Jenkins when it is accessed via the internet. Private Hosted Zone will provide DNS name resolution for Jenkins when it is accessed by other servers within the same Amazon VPC.
 
  * On AWS, select Services > Route 53 > Hosted zones  
  * New Domain & Record Sets:
@@ -126,37 +126,43 @@ Utilize [Amazon Route 53](https://aws.amazon.com/route53/) to create Public and 
      * Comment: some/comment/here   
      * Type: Private Hosted Zone for Amazon VPC  
      * VPC ID: choose the Amazon VPC that you want to associated with the hosted zone  
-     * Click Create  
+     * Select `Create`  
    * In Hosted zones, select the previously created private zone > click Create Record Set  
      * In Create Record Set pane, enter:  
      * Name: e.g. `jenkins1.myjenkinsdomainname.com`  
      * Value: enter the private ip of the the Jenkins EC2 instance.  
-     * Click Create
-  * Modifying existing Route 53 configuration:
+     * Select `Create`
+
+* Modifying existing Route 53 configuration:
     * Replace old Public & Private IP addresses with that of your Jenkins EC2 instance.
 
 #### Nginx
- * SSH into the newly created Jenkins instance  
- * Navigate to /etc/nginx/nginx.conf > Uncomment out the following line:
+ * SSH into the newly created Jenkins instance
+
+ `ssh -i /Users/<your user name>/.ssh/<your-AWS-Key-Pair.pem> <user name defined in the Packer template>@<the EC2 instance public DNS>`  
+ * Navigate to /etc/nginx/nginx.conf > Uncomment this line:
  `include /etc/nginx/conf.d/*.conf`
 
 #### Add letsencrypt certs  
  * Stop Nginx:  
  `sudo service nginx stop`
  * Generate letsencrypt certificate:  
- ```
- sudo wget https://dl.eff.org/certbot-auto  
- sudo chmod a+x certbot-auto  
- sudo ./certbot-auto certonly --standalone -d jenkins/domain/name
- ```  
+
+ `sudo wget https://dl.eff.org/certbot-auto`
+
+ `sudo chmod a+x certbot-auto`
+
+ `sudo ./certbot-auto certonly --standalone -d <Jenkins record set domain>`
+
  * Start Nginx:  
  `sudo service nginx start`  
 
-#### Jenkins First Step   
- * Using a web browser, navigate to jenkins/domain/name  
+#### Jenkins First Login   
+ * Using a web browser, navigate to the Jenkins instance url.
+ * While ssh'd in to your Jenkins instance, do `sudo su` and `cat /var/lib/jenkins/secrets/initialAdminPassword`
  * Log in using the password created in `/var/lib/jenkins/secrets/initialAdminPassword`  
  * Select to install most recommended plugins  
- * Lastly, create a local admin account  
+ * Create a local admin account  
 
 #### Manage Jenkins Plugins  
  * Login to Jenkins > click Manage Jenkins > click on Manage Plugins  
