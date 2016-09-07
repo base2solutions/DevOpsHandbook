@@ -226,21 +226,6 @@ Export these keys and do `packer build path/to/baseJenkinsEC2.json` again.
  * To backup Jenkins using AWS Lambda, first we need to create a service role on AWS IAM. This will allow the service to handle EBS snapshot and perform instance backup and deletion of snapshots.  
  * Next we use AWS lambda to create a function, run via Python, to perform the required instance backup tasks. Then we attach the backup IAM role to this function to execute the specify tasks.  
 
-#### Install and use AWS CLI:  
- * AWS CLI install - Windows  
-   * Download the binary for Windows at - http://aws.amazon.com/cli/  
- * AWS CLI install - Mac and Linux (via pip)
-   * Requires Python 2.6.5 or higher + PIP  
-   * Install via `pip install awscli`
- * (Optional Manual Instructions)
-   ```
-   curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip"  
-   unzip awscli-bundle.zip  
-   sudo ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws  
-   ```
- * AWS Command structure:  
-   `aws <command> <subcommand> [options and parameters]`
-
 #### AWS - IAM permissions:  
  * Sign into Amazon > Click Services > Click IAM > Click Roles > Create New Role  
    * Step 1: Set Role Name  
