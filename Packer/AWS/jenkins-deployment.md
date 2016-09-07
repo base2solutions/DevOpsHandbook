@@ -1,33 +1,37 @@
 # Jenkins on AWS
 A guide to deploying and configuring Jenkins on an AWS EC2 instance.
 
-#### You will need:
+#### You Will Need:
 * A url for your server
-* An AWS account
-* A Github account
+* [An AWS account](https://aws.amazon.com/)
+* [A Github account](https://github.com/)
 
 #### Utilized Files & Folders:
 Files and folders from the base2solutions DevOps repository utilized in the Jenkins Packer deployment.
 
-`Packer/AWS/baseJenkinsEC2.json` - Packer template.
+`Packer/AWS/baseJenkinsEC2.json` - [amazon-ebs Packer template](https://www.packer.io/docs/builders/amazon-ebs.html). Creates an [AMI](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html) on your AWS account from which an AWS EC2 instance will be launched.
 
 `Packer/AWS/jenkins.sh` - Script that installs Java, Docker, Nginx, Git, and Jenkins.
 
-`Packer/AWS/userNPermissions.sh` - Optional script that adds Vagrant as a user. Remove the line `"{{template_dir}}/scripts/userNPermissions.sh",` from `baseJenkinsEC2.json` if you'd like to exclude this script from the Packer build.
+`Packer/AWS/userNPermissions.sh` - Optional script that adds Vagrant as a user. Remove the line `"{{template_dir}}/scripts/userNPermissions.sh",` from `baseJenkinsEC2.json` if you'd like to exclude this script from the Packer AMI build.
 
 `Packer/conf/jenkins.conf` - Jenkins nginx config file.
 
 ### Step 1: Deploy Jenkins via Packer
 
-#### Packer Build
+#### Packer AMI Build
  * Install [Packer](https://www.packer.io/downloads.html)  
  * Clone the DevOps repository:  
  `git clone https://github.com/base2solutions/DevOps.git`
  * Visit `Packer/conf/jenkins.conf` and replace the lines `<server url here>` with your server url.
- * Make modifications to the packer template (`baseJenkinsEc2.json`) as necessary.
+ * Modify `baseJenkinsEc2.json` (the Packer template) as necessary.
+
  * Start Packer Build process:  
  `packer build path/to/baseJenkinsEC2.json`
- * Once the build process has been completed, sign into Amazon AWS Console> Click on Services and click EC2  
+ * Once the build process has been completed, sign into Amazon AWS Console
+
+#### Launch EC2 instance from AMI
+ * From the AWS Console, select EC2
  * On EC2:  
    * Under Images, click AMIs  
    * Select the previously created Jenkins AMI and click Launch > launch the AMI to create the Jenkins instance.  
