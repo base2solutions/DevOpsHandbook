@@ -93,10 +93,12 @@ Export these keys and do `packer build path/to/baseJenkinsEC2.json` again.
       Type            Protocol            Port Range          Source
       HTTP              TCP                   80             0.0.0.0/0
       All traffic       All                   All            <Group ID of this Security Group> <(Group Name here)
+      All traffic       All                   All             <your vpc CIDR>
       SSH               TCP                   22               0.0.0.0/0
       HTTPS             TCP                   443              0.0.0.0/0
 ```
-     * Outbound:
+
+    * Outbound:
 ```
      Type            Protocol            Port Range          Destination
      All traffic         All                All               0.0.0.0/0
@@ -105,31 +107,33 @@ Export these keys and do `packer build path/to/baseJenkinsEC2.json` again.
   * Review and Launch.
 
 ### Step 3: Configure Jenkins
-#### Route 53  
- * On AWS, click on Services > click Route 53 > click on Hosted zones  
- * In Hosted zones:  
-   * Click Create Hosted Zone and enter the following:  
-     * Domain name: jenkins/domain/name  
+#### Route 53
+Utilize [Amazon Route 53](https://aws.amazon.com/route53/) to create Public and Private Hosted Zones. Public Hosted Zone will provide DNS name resolution for your Jenkins when it is accessed via the internet. Private Hosted Zone will provide dns name resolutions for your Jenkins when it is accessed by other servers within the same Amazon VPC.
+
+ * On AWS, select Services > Route 53 > Hosted zones  
+ * New Domain & Record Sets:
+   * Select `Create Hosted Zone` and create a Public Hosted Zone:  
+     * Domain name: e.g. `myjenkinsdomainname.com`
      * Comment: some/comment/here  
      * Type: Public Hosted Zone  
      * Click Create  
-   * In Hosted zones, select the previously created public zone > click Create Record Set  
-     * In Create Record Set pane, enter:  
-     * Name: jenkins/domain/name  
-     * Value: enter the public ip of the newly created Jenkins instance  
-     * Click Create  
-   * Click Create Hosted Zone again and enter the following:  
-     * Domain name: jenkins/domain/name  
+   * Select `Create Record Set`   
+     * Name: e.g. `jenkins1.myjenkinsdomainname.com`
+     * Value: enter the public ip of the Jenkins EC2 instance.
+     * Select `Create`  
+   * Select `Create Hosted Zone` and create a Private Hosted Zone:  
+     * Domain name: e.g. `myjenkinsdomainname.com`
      * Comment: some/comment/here   
      * Type: Private Hosted Zone for Amazon VPC  
      * VPC ID: choose the Amazon VPC that you want to associated with the hosted zone  
      * Click Create  
    * In Hosted zones, select the previously created private zone > click Create Record Set  
      * In Create Record Set pane, enter:  
-     * Name: jenkins/domain/name  
-     * Value: enter the private ip of the newly created Jenkins instance  
-     * Click Create  
- * Public Hosted Zone will provide dns name resolution for your Jenkins when it is accessed via the internet. Private Hosted Zone will provide dns name resolutions for your Jenkins when it is accessed by other servers within the same Amazon VPC.  
+     * Name: e.g. `jenkins1.myjenkinsdomainname.com`  
+     * Value: enter the private ip of the the Jenkins EC2 instance.  
+     * Click Create
+  * Modifying existing Route 53 configuration:
+    * Replace old Public & Private IP addresses with that of your Jenkins EC2 instance.
 
 #### Nginx
  * SSH into the newly created Jenkins instance  
@@ -145,21 +149,6 @@ Export these keys and do `packer build path/to/baseJenkinsEC2.json` again.
  sudo chmod a+x certbot-auto  
  sudo ./certbot-auto certonly --standalone -d jenkins/domain/name
  ```  
-
-#### Set Jenkins SSL certs in Jenkins config file:  
- * modify /etc/nginx/conf.d/jenkins.conf file as follow:  
-   * Add:
-   ```  
-   ssl_certificate           /etc/letsencrypt/live/jenkins_domain_name/fullchain.pem;  
-   ssl_certificate_key       /etc/letsencrypt/live/jenkins_domain_name/privkey.pem;  
-   ssl on;  
-   ```
-   * Comment out:
-   ```  
-   #  ssl_certificate           /etc/nginx/cert.crt;  
-   #  ssl_certificate_key       /etc/nginx/cert.key;  
-   #  ssl_dhparam               /etc/nginx/ssl/dh2048.pem;  
-   ```
  * Start Nginx:  
  `sudo service nginx start`  
 
