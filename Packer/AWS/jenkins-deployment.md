@@ -1,10 +1,7 @@
 # Jenkins on AWS
-A guide to deploying and configuring Jenkins on an AWS EC2 instance.
+A guide to deploying and configuring Jenkins with GitHub authentication on an AWS EC2 instance.
 
-#### You Will Need:
-* A url for your server
-* [An AWS account](https://aws.amazon.com/)
-* [A Github account](https://github.com/)
+To begin you need a url for your server, an [AWS](https://aws.amazon.com/) account, and a [Github ](https://github.com/) account.
 
 #### Utilized Files & Folders:
 Files and folders from the base2solutions DevOps repository utilized in the Jenkins Packer deployment.
@@ -16,8 +13,15 @@ Files and folders from the base2solutions DevOps repository utilized in the Jenk
 `Packer/AWS/userNPermissions.sh` - Optional script that adds Vagrant as a user. Remove the line `"{{template_dir}}/scripts/userNPermissions.sh",` from `baseJenkinsEC2.json` if you'd like to exclude this script from the Packer AMI build.
 
 `Packer/conf/jenkins.conf` - Jenkins nginx config file.
+### Step 1: Set Up the AWS Command Line Interface
 
-### Step 1: Deploy Jenkins via Packer
+1. Create your AWS access key ID and secret access key. [Instructions available here.](http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-set-up.html)
+2. Install the AWS CLI. [Instructions available here.](http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-set-up.html)
+3. Configure the AWS CLI. [Instructions available here.](http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-set-up.html)
+
+More info on AWS CLI available [here.](https://github.com/aws/aws-cli)
+
+### Step 2: Deploy Jenkins via Packer
 
 #### Packer AMI Build
  * Install [Packer](https://www.packer.io/downloads.html)  
@@ -30,15 +34,32 @@ Files and folders from the base2solutions DevOps repository utilized in the Jenk
  `packer build path/to/baseJenkinsEC2.json`
  * Once the build process has been completed, sign into Amazon AWS Console
 
+##### Troubleshooting
+
+If you encounter this error during a  `packer build`:
+```
+Build 'amazon-ebs' errored: Script exited with non-zero exit status: 1
+
+==> Some builds didn't complete successfully and had errors:
+--> amazon-ebs: Script exited with non-zero exit status: 1
+
+==> Builds finished but no artifacts were created.
+```
+
+Export your AWS Access Key and Access Key ID like so from your terminal:
+
+`export AWS_ACCESS_KEY_ID=<access key id here>`
+
+`export AWS_SECRET_ACCESS_KEY=<secret key here>`
+
+Export these keys and do `packer build path/to/baseJenkinsEC2.json` again.
+
 #### Launch EC2 instance from AMI
  * From the AWS Console, select EC2
- * On EC2:  
-   * Under Images, click AMIs  
-   * Select the previously created Jenkins AMI and click Launch > launch the AMI to create the Jenkins instance.  
+ * Under Images, click AMIs  
 
- * For full list of available builders/provisioner/post-provisioner, check out [Packer Documentations](https://www.packer.io/docs). If what you are looking for is not found, it is likely available via Packer Plugins  
 
-### Step 2: Configure Jenkins
+### Step 3: Configure Jenkins
 #### Route 53  
  * On AWS, click on Services > click Route 53 > click on Hosted zones  
  * In Hosted zones:  
