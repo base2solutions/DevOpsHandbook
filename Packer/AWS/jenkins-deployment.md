@@ -15,26 +15,31 @@ Files and folders from the base2solutions DevOps repository utilized in the Jenk
 `Packer/conf/jenkins.conf` - Jenkins nginx config file.
 ### Step 1: Set Up the AWS Command Line Interface
 
-1. Create your AWS access key ID and secret access key. [Instructions available here.](http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-set-up.html)
+1. Create & Save your AWS access key ID and secret access key. [Instructions available here.](http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-set-up.html)
 2. Install the AWS CLI (2 options)
  * [AWS CLI Global Installation](http://docs.aws.amazon.com/cli/latest/userguide/installing.html)
  * Install AWS CLI in a Python virtual environment (recommended):
-    * `awscli` will be installed in the `jenkins-env` virtual environment. Do all your AWS CLI configurations from this environment.
     * Install pip (python package manager)
     * Do `sudo pip install virtualenv`
     * Create a `VIRTUAL_ENVS` directory hold your Python virtual environments
     * Change directory into `VIRTUAL_ENVS` and create a new virtual environment with `virtualenv jenkins-env`. This will create a directory called `jenkins-env`within `VIRTUAL_ENVS`.
     * Change directory into `jenkins-env` and do `source bin/activate` to activate your virtual environment.
     * In your virtual environment, do `pip install awscli`
-    * Configure AWS CLI.
+    * Move on to the `Configure AWS CLI` step.
     * `virtualenv` tips:
       * To exit type `deactivate` in your terminal.
       * To reactivate change directory into `jenkins-env` and do `source bin/activate`
-      * More info on `virtualenv` [here](https://virtualenv.pypa.io/en/stable/)
+      * More info on `virtualenv` [here](https://virtualenv.pypa.io/en/stable/).
 
-3. Configure the AWS CLI. [Instructions available here.](http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html#cli-quick-configuration)
+3. Configure the AWS CLI.
+   * Do `aws configure`. If you are using `virtualenv`, do `aws configure` from within the virtual environment where `aws cli` was installed.
+   * input your AWS Access Key ID
+   * input your AWS Secret Access Key
+   * input your default region name, e.g. `us-west-2`
+   * input `json` as the Default output format
+   * [more info here.](http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html#cli-quick-configuration)
 
-More info on AWS CLI available [here.](https://github.com/aws/aws-cli)
+For more information on the aws-cli Python package checkout their [GitHub repository](https://github.com/aws/aws-cli).
 
 ### Step 2: Deploy Jenkins via Packer
 
@@ -70,9 +75,34 @@ Export your AWS Access Key and Access Key ID like so from your terminal:
 Export these keys and do `packer build path/to/baseJenkinsEC2.json` again.
 
 #### Launch EC2 instance from AMI
- * From the AWS Console, select EC2
- * Under Images, click AMIs  
+ * From the AWS Console, select `EC2`
+ * Under Images, select `AMIs`
+ * Select the newly created AMI and hit `Launch`:
+    * "Choose an Instance Type"
+      * Select your instance type. `t2.micro` is sufficient.
+    * "Configure Instance Details"
+      * Select or configure a [VPC](http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Subnets.html#YourVPC)
+      * Under `Auto-assign Public IP` select `Enable`
+    * "Add Storage"
+      * No modifications needed if you specified the storage type in the Packer template.
+    * "Tag Instance"
+      * Give your instance a name.
+    * "Configure Security Group"
+      * Select an existing Security group or create a Security Group with the following Inbound:
+```
+      Type            Protocol            Port Range          Source
+      HTTP              TCP                   80             0.0.0.0/0
+      All traffic       All                   All            <Group ID of this Security Group> <(Group Name here)
+      SSH               TCP                   22               0.0.0.0/0
+      HTTPS             TCP                   443              0.0.0.0/0
+```
+     * Outbound:
+```
+     Type            Protocol            Port Range          Destination
+     All traffic         All                All               0.0.0.0/0
+```
 
+  * Review and Launch.
 
 ### Step 3: Configure Jenkins
 #### Route 53  
