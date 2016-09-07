@@ -13,7 +13,7 @@ Files and folders from the base2solutions DevOps repository utilized in the Jenk
 `Packer/AWS/userNPermissions.sh` - Optional script that adds Vagrant as a user. Remove the line `"{{template_dir}}/scripts/userNPermissions.sh",` from `baseJenkinsEC2.json` if you'd like to exclude this script from the Packer AMI build.
 
 `Packer/conf/jenkins.conf` - Jenkins nginx config file.
-### Step 1: Set Up the AWS Command Line Interface
+### Step 1: Set Up with AWS CLI
 
 1. Create & Save your AWS access key ID and secret access key. [Instructions available here.](http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-set-up.html)
 2. Install the AWS CLI (2 options)
@@ -38,6 +38,11 @@ Files and folders from the base2solutions DevOps repository utilized in the Jenk
    * input your default region name, e.g. `us-west-2`
    * input `json` as the Default output format
    * [more info here.](http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html#cli-quick-configuration)
+
+4. Create an Amazon EC2 Key Pair.
+  * change directory to `/Users/<user name>/.ssh/`
+  * do `aws ec2 create-key-pair --key-name <AWS key pair name> --query "KeyMaterial" --output text > <AWS key pair name>.pem`
+  * do `chmod 700 <AWS key pair name>.pem`
 
 For more information on the aws-cli Python package checkout their [GitHub repository](https://github.com/aws/aws-cli).
 
@@ -105,6 +110,7 @@ Export these keys and do `packer build path/to/baseJenkinsEC2.json` again.
 ```
 
   * Review and Launch.
+  * Select the EC2 Key Pair create in `Step 1: Set Up with AWS CLI`
 
 ### Step 3: Configure Jenkins
 #### Route 53
@@ -157,7 +163,7 @@ Use [Amazon Route 53](https://aws.amazon.com/route53/) to create Public and Priv
  * Start Nginx:  
  `sudo service nginx start`  
 
-#### Jenkins First Login   
+#### Initial Jenkins Login   
  * Using a web browser, navigate to the Jenkins instance url.
  * While ssh'd in to your Jenkins instance, do `sudo su` and `cat /var/lib/jenkins/secrets/initialAdminPassword`
  * Log in using the password created in `/var/lib/jenkins/secrets/initialAdminPassword`  
@@ -204,7 +210,7 @@ Use [Amazon Route 53](https://aws.amazon.com/route53/) to create Public and Priv
  >    Name: name_of_ecs_cloud
  >    Amazon ECS Credentials: select service account with access permission to ECS cluster  
  >    Amazon ECS Region Name: select region where the ECS cluster is located  
- >    click Advanced > In Alternative Jenkins URL > enter "jenkins/domain/name" here
+ >    click Advanced > In Alternative Jenkins URL > enter "<Jenkins record set domain>" here
 
  * Locate ECS slave templates > click Add > Enter the following:  
  >    Label: enter name which will be used to reference to this slave  
@@ -218,10 +224,10 @@ Use [Amazon Route 53](https://aws.amazon.com/route53/) to create Public and Priv
 
 ### Configure GitHub and Amazon AWS credentials:
 #### GitHub - Repository webhook  
- * Log into GitHub at https://github.com > navigate to organization/repository > click Settings  
- * Click Webhooks & services  
- * Click Add webhook > Select Jenkins (GitHub plugin) > Enter the following:  
-   * Payload URL: jenkins/domain/name/ghprbhook/  
+ * your organization > repository > Settings  
+ * Select Webhooks & services  
+ * Select `Add webhook`:  
+   * Payload URL: <Jenkins record set domain>/ghprbhook/  
    * Content type: application/x-www-form-urlencoded  
    * Which events would you like to trigger this webhook? > select `Let me select individual events` and tick the following options:
    ```  
@@ -232,12 +238,12 @@ Use [Amazon Route 53](https://aws.amazon.com/route53/) to create Public and Priv
    * At the bottom, select `ACTIVE` and Click `Add webhook`  
 
 #### GitHub - OAuth Applications  
- * Log into GitHub at https://github.com > navigate to organization/name > click Settings  
- * Click on OAuth applications > Click on Register an application > Enter:  
+ * Select your user icon > settings
+ * Select OAuth applications > Register a new application:  
  * Application name: enter application name here  
- * Homepage URL: jenkins/domain/name  
+ * Homepage URL: <Jenkins record set domain>  
  * Application descriptions: some descriptions
- * Authorized callback URL: jenkins/domain/name or URL/where/user/access/Jenkins  
+ * Authorized callback URL: `https://<Jenkins record set domain>/securityRealm/finishLogin` or URL/where/user/access/Jenkins  
 
 #### AWS - IAM  
  * Sign into AWS Console > click Services > click IAM  
