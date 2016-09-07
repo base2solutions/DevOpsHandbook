@@ -1,84 +1,40 @@
-# (AWS) Jenkins Deployment
+# Jenkins on AWS
+A guide to deploying and configuring Jenkins on an AWS EC2 instance.
 
-<br />
-### Deploy Jenkins via Packer:  
-#### Packer Build  
+#### You will need:
+* A url for your server
+* An AWS account
+* A Github account
+
+#### Utilized Files & Folders:
+Files and folders from the base2solutions DevOps repository utilized in the Jenkins Packer deployment.
+
+`Packer/AWS/baseJenkinsEC2.json` - Packer template.
+
+`Packer/AWS/jenkins.sh` - Script that installs Java, Docker, Nginx, Git, and Jenkins.
+
+`Packer/AWS/userNPermissions.sh` - Optional script that adds Vagrant as a user. Remove the line `"{{template_dir}}/scripts/userNPermissions.sh",` from `baseJenkinsEC2.json` if you'd like to exclude this script from the Packer build.
+
+`Packer/conf/jenkins.conf` - Jenkins nginx config file.
+
+### Step 1: Deploy Jenkins via Packer
+
+#### Packer Build
  * Install [Packer](https://www.packer.io/downloads.html)  
- * Clone DevOps repository:  
- `git clone path/to/github/devops/repo`
- * Change directory to the location of the packer template:  
+ * Clone the DevOps repository:  
+ `git clone https://github.com/base2solutions/DevOps.git`
+ * Visit `Packer/conf/jenkins.conf` and replace the lines `<server url here>` with your server url.
+ * Make modifications to the packer template (`baseJenkinsEc2.json`) as necessary.
  * Start Packer Build process:  
- `packer build path/to/json/template`
+ `packer build path/to/baseJenkinsEC2.json`
  * Once the build process has been completed, sign into Amazon AWS Console> Click on Services and click EC2  
  * On EC2:  
    * Under Images, click AMIs  
    * Select the previously created Jenkins AMI and click Launch > launch the AMI to create the Jenkins instance.  
 
-#### Packer Template  
- * Basic layout of a packer template is as follow:  
-   * Builder: a set of components that create the initial base image  
-   ```
-            "builder": [  
-                {"type": "virtualbox-ovf",  
-                 "source_path": "virtualbox/box.ovf",  
-                 "ssh_username": "vagrant",  
-                 "ssh_password": "vagrant",  
-                 "shutdown_command": "echo 'packer' | sudo -S shutdown -P now"  
-                }]
-   ```
-   * Provisioners: plugins that can be attached to the initial base image to bring it to the desired state  
-   ```
-            "provisioners": [  
-                {"type": "shell",  
-                 "inline": [  
-                 "sudo mkdir /tm/vboxguest",  
-                 "cd /tmp/vboxguest"  
-                }]
-   ```
-   * Post-Processors: take provisioned image and convert it to the final usable artifact (vagrant box file)  
-   ```
-            "post-processors": [  
-                {"type": "vagrant",  
-                 "output": "dummy.box"  
-                }],  
-   ```
  * For full list of available builders/provisioner/post-provisioner, check out [Packer Documentations](https://www.packer.io/docs). If what you are looking for is not found, it is likely available via Packer Plugins  
- * There are two types of variables in Packer:  
-   * Global/built-in variables:  
-   * User variables
- * The followings are examples of Global/built-in variables:  
-   * build_name - The name of the build being run.  
-   * build_type - The type of the builder being used currently.  
-   * isotime [FORMAT] - UTC time, which can be formatted.  
-   * lower - Lowercases the string.  
-   * pwd - The working directory while executing Packer.  
-   * template_dir - The directory to the template for the build.  
-   * timestamp - The current Unix timestamp in UTC.  
-   * uuid - Returns a random UUID.  
-   * upper - Uppercases the string.  
-     * Global variables could be called with {{ variable_name }}
- * To use user variables in a Packer template, you have to define them first in the `variables` section:  
- ```
-          "variables": {  
-              "ssh_username": "root",  
-              "ssh_password": "root"
-          }
- ```
- * Once you define your variables in the `variables` section, you could then call them as follow with `"{{user 'name_of_your_variables'}}"`
-```
-          "variables": {  
-          "my_username": "root",  
-          "my_password": "root"
-          },
-          "builders": [
-          {
-              "type": "virtualbox-iso",
-              "ssh_username": "{{user `my_username`}}",
-              "ssh_password": "{{user `my_password`}}"
-          }]
- ```
 
-### Configure Jenkins:  
+### Step 2: Configure Jenkins
 #### Route 53  
  * On AWS, click on Services > click Route 53 > click on Hosted zones  
  * In Hosted zones:  
