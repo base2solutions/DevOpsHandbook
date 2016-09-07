@@ -16,8 +16,23 @@ Files and folders from the base2solutions DevOps repository utilized in the Jenk
 ### Step 1: Set Up the AWS Command Line Interface
 
 1. Create your AWS access key ID and secret access key. [Instructions available here.](http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-set-up.html)
-2. Install the AWS CLI. [Instructions available here.](http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-set-up.html)
-3. Configure the AWS CLI. [Instructions available here.](http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-set-up.html)
+2. Install the AWS CLI (2 options)
+ * [AWS CLI Global Installation](http://docs.aws.amazon.com/cli/latest/userguide/installing.html)
+ * Install AWS CLI in a Python virtual environment (recommended):
+    * `awscli` will be installed in the `jenkins-env` virtual environment. Do all your AWS CLI configurations from this environment.
+    * Install pip (python package manager)
+    * Do `sudo pip install virtualenv`
+    * Create a `VIRTUAL_ENVS` directory hold your Python virtual environments
+    * Change directory into `VIRTUAL_ENVS` and create a new virtual environment with `virtualenv jenkins-env`. This will create a directory called `jenkins-env`within `VIRTUAL_ENVS`.
+    * Change directory into `jenkins-env` and do `source bin/activate` to activate your virtual environment.
+    * In your virtual environment, do `pip install awscli`
+    * Configure AWS CLI.
+    * `virtualenv` tips:
+      * To exit type `deactivate` in your terminal.
+      * To reactivate change directory into `jenkins-env` and do `source bin/activate`
+      * More info on `virtualenv` [here](https://virtualenv.pypa.io/en/stable/)
+
+3. Configure the AWS CLI. [Instructions available here.](http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html#cli-quick-configuration)
 
 More info on AWS CLI available [here.](https://github.com/aws/aws-cli)
 
