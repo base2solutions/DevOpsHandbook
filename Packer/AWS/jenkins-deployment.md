@@ -147,14 +147,15 @@ Choose the option that makes sense for your project.
 
 Option 3 would not be appropriate for storing your template in a public repository.
 
-1. Set variables from the command line during packer build:
+a. Set variables from the command line during packer build:
 ```
 packer build \
 -var 'aws_region=us-west-1' \
 -var 'aws_instance_type=t2.micro' \
 baseJenkinsEC2.json
 ```
-2. Set variables in an external JSON file:
+
+b. Set variables in an external JSON file:
 ```
 {
   "aws_access_key": "foo",
@@ -163,7 +164,8 @@ baseJenkinsEC2.json
 }
 ```
 Then do `packer build -var-file=variables.json baseJenkinsEC2.json`
-3. Replace with real values
+
+c. Replace with real values
  * Delete all variables except for `aws_access_key` and `aws_secret_key`
  * Replace all `{{ user aws_stuff_here }}` template variable references except the `aws_access_key` and `aws_secret_key`:
 
