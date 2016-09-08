@@ -90,6 +90,8 @@ All traffic         All                All               0.0.0.0/0
  Clone the base2solutions DevOps repository:
 `git clone https://github.com/base2solutions/DevOps.git`
 
+ Visit `Packer/conf/jenkins.conf` and replace the lines `<server url here>` with your server url.
+
 #### Modify the Packer Template
 
   The `baseJenkinsEc2.json` Packer template is composed of:
@@ -189,13 +191,12 @@ Option 3. Replace with real values.
 Then do `packer build path/to/baseJenkinsEC2.json`
 #### Packer AMI Build
  * Identify Variable & Builders Parameters method and gather necessary parameters.
- * Visit `Packer/conf/jenkins.conf` and replace the lines `<server url here>` with your server url.
  * Start Packer Build process with your preferred method:
 
  `packer build \ -var 'aws_region=us-west-1' \ -var ...etc.` (Option 1)
 
  `packer build -var-file=variables.json path/to/baseJenkinsEC2.json` (Option 2)
- 
+
  `packer build path/to/baseJenkinsEC2.json` (Option 3)
  * Once the build process has been completed, sign into Amazon AWS Console
 
