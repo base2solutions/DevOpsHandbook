@@ -6,7 +6,7 @@ To begin you need a url for your server, an [AWS](https://aws.amazon.com/) accou
 #### Utilized Files & Folders:
 Files and folders from the base2solutions DevOps repository utilized in the Jenkins Packer deployment.
 
-`Packer/AWS/baseJenkinsEC2.json` - The [Packer Template](https://www.packer.io/docs/templates/introduction.html). Packer templates are JSON files that configure Packer in order to create machine images. This [amazon-ebs](https://www.packer.io/docs/builders/amazon-ebs.html) Packer templste creates an [AMI](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html) on your AWS account from which an AWS EC2 instance will be launched.
+`Packer/AWS/baseJenkinsEC2.json` - The [Packer Template](https://www.packer.io/docs/templates/introduction.html). Packer templates are JSON files that configure Packer in order to create machine images. This [amazon-ebs](https://www.packer.io/docs/builders/amazon-ebs.html) Packer template creates an [AMI](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html) on your AWS account from which an AWS EC2 instance will be launched.
 
 `Packer/AWS/jenkins.sh` - Script that installs Java, Docker, Nginx, Git, and Jenkins.
 
