@@ -154,7 +154,6 @@ packer build \
 -var 'aws_instance_type=t2.micro' \
 baseJenkinsEC2.json
 ```
-
 2. Set variables in an external JSON file:
 ```
 {
