@@ -148,7 +148,6 @@ Choose the option that makes sense for your project.
 Option 3 would not be appropriate for storing your template in a public repository.
 
 1. Set variables from the command line during packer build:
-
 ```
 packer build \
 -var 'aws_region=us-west-1' \
