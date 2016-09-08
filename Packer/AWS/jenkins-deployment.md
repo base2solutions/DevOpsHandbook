@@ -157,7 +157,7 @@ Use [Amazon Route 53](https://aws.amazon.com/route53/) to create Public and Priv
  * your organization > repository > Settings  
  * Select Webhooks & services  
  * Select `Add webhook`:  
-   * Payload URL: <Jenkins record set domain>/ghprbhook/  
+   * Payload URL: `<Jenkins record set domain>/ghprbhook/`  
    * Content type: application/x-www-form-urlencoded  
    * Which events would you like to trigger this webhook? > select `Let me select individual events` and tick the following options:
    ```  
