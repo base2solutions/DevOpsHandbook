@@ -57,15 +57,47 @@ Files and folders from the base2solutions DevOps repository utilized in the Jenk
 
 For more information on the aws-cli Python package checkout their [GitHub repository](https://github.com/aws/aws-cli).
 
-### Step 2: Deploy Jenkins via Packer
+### Step 2: Create AWS Variables for Packer
 
-#### Packer AMI Build
- * Install [Packer](https://www.packer.io/downloads.html)  
- * Clone the DevOps repository:  
- `git clone https://github.com/base2solutions/DevOps.git`
+1. Create a [VPC](http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/getting-started-create-vpc.html)
+2. Create a Subnet
+  * `Services > VPC > Subnets > Create Subnet`
+  * Associate it with the VPC you created
+  * Select your Availability Zone
+  * Input a Subnet CIDR block with the same IP as your VPC but with a different netmask.
+3. Create a [Security Group](http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/getting-started-create-security-group.html) and configure with the following Inbound & Outbound:
+
+Inbound
+```
+Type            Protocol            Port Range          Source
+HTTP              TCP                   80             0.0.0.0/0
+All traffic       All                   All            <this security group>
+All traffic       All                   All             <your vpc CIDR>
+SSH               TCP                   22               0.0.0.0/0
+HTTPS             TCP                   443              0.0.0.0/0
+```
+
+Outbound
+```
+Type            Protocol            Port Range          Destination
+All traffic         All                All               0.0.0.0/0
+```
+
+### Step 3: Deploy Jenkins via Packer
+
+ Install [Packer](https://www.packer.io/downloads.html)
+
+ Clone the base2solutions DevOps repository:
+`git clone https://github.com/base2solutions/DevOps.git`
+
+1. Modify the Packer Template
+
+[Packer Templates](https://www.packer.io/docs/templates/introduction.html) are JSON files that configure Packer in order to create machine images.
+
  * Visit `Packer/conf/jenkins.conf` and replace the lines `<server url here>` with your server url.
- * Modify `baseJenkinsEc2.json` (the Packer template) [Needs explanation]
 
+
+2. Packer AMI Build
  * Start Packer Build process:  
  `packer build path/to/baseJenkinsEC2.json`
  * Once the build process has been completed, sign into Amazon AWS Console
@@ -90,40 +122,25 @@ Export your AWS Access Key and Access Key ID like so from your terminal:
 
 Export these keys and do `packer build path/to/baseJenkinsEC2.json` again.
 
-#### Launch EC2 instance from AMI
+3. Launch EC2 instance from AMI
  * From the AWS Console, select `EC2`
  * Under Images, select `AMIs`
  * Select the newly created AMI and hit `Launch`:
     * "Choose an Instance Type"
       * Select your instance type. `t2.micro` is sufficient.
     * "Configure Instance Details"
-      * Select or configure a [VPC](http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Subnets.html#YourVPC)
+      * Select the VPC used in the Packer template.
       * Under `Auto-assign Public IP` select `Enable`
     * "Add Storage"
       * No modifications needed if you specified the storage type in the Packer template.
     * "Tag Instance"
       * Give your instance a name.
     * "Configure Security Group"
-      * Select an existing Security group or create a Security Group with the following Inbound:
-```
-      Type            Protocol            Port Range          Source
-      HTTP              TCP                   80             0.0.0.0/0
-      All traffic       All                   All            <Group ID of this Security Group> <(Group Name here)
-      All traffic       All                   All             <your vpc CIDR>
-      SSH               TCP                   22               0.0.0.0/0
-      HTTPS             TCP                   443              0.0.0.0/0
-```
-
-      * Outbound:
-```
-     Type            Protocol            Port Range          Destination
-     All traffic         All                All               0.0.0.0/0
-```
-
+      * Select the Security Group used in the Packer template.
   * Review and Launch.
-  * Select the EC2 Key Pair created in `Step 1: Set Up with AWS CLI`
+  * Select your EC2 Key Pair created in `Step 1: Set Up with AWS CLI`
 
-### Step 3: Configure Route 53
+### Step 4: Configure Route 53
 Use [Amazon Route 53](https://aws.amazon.com/route53/) to create Public and Private Hosted Zones. Public Hosted Zone will provide DNS name resolution for your Jenkins when it is accessed via the internet. Private Hosted Zone will provide DNS name resolution for Jenkins when it is accessed by other servers within the same Amazon VPC.
 
  * On AWS, select Services > Route 53 > Hosted zones  
@@ -152,7 +169,7 @@ Use [Amazon Route 53](https://aws.amazon.com/route53/) to create Public and Priv
 * Follow these steps to modify existing Route 53 configurations:
     * Replace old Public & Private IP addresses with that of your Jenkins EC2 instance.
 
-### Step 4: Configure GitHub
+### Step 5: Configure GitHub
 #### GitHub - Repository webhook  
  * your organization > repository > Settings  
  * Select Webhooks & services  
@@ -175,7 +192,7 @@ Use [Amazon Route 53](https://aws.amazon.com/route53/) to create Public and Priv
  * Application descriptions: some descriptions
  * Authorized callback URL: `https://<Jenkins record set domain>/securityRealm/finishLogin` or URL/where/user/access/Jenkins  
 
-### Step 5: Configure Jenkins
+### Step 6: Configure Jenkins
 #### Nginx
  * SSH into the newly created Jenkins instance
 
