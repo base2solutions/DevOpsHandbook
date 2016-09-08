@@ -121,7 +121,7 @@ Export these keys and do `packer build path/to/baseJenkinsEC2.json` again.
 ```
 
   * Review and Launch.
-  * Select the EC2 Key Pair create in `Step 1: Set Up with AWS CLI`
+  * Select the EC2 Key Pair created in `Step 1: Set Up with AWS CLI`
 
 ### Step 3: Configure Route 53
 Use [Amazon Route 53](https://aws.amazon.com/route53/) to create Public and Private Hosted Zones. Public Hosted Zone will provide DNS name resolution for your Jenkins when it is accessed via the internet. Private Hosted Zone will provide DNS name resolution for Jenkins when it is accessed by other servers within the same Amazon VPC.
