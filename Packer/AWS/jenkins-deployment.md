@@ -16,7 +16,18 @@ Files and folders from the base2solutions DevOps repository utilized in the Jenk
 ### Step 1: Set Up with AWS CLI
 
 1. Create & Save your AWS access key ID and secret access key. [Instructions available here.](http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-set-up.html)
-2. Install the AWS CLI (2 options)
+
+2. Create a separate service user (if nonexistent)
+ * `Services > Users > Create New User`
+ * Give service user a name and hit `Create`
+ * Select `Download Security Credentials` and `close`
+ * Move service user credentials to a safe place
+
+3. Add Permissions to service user
+ * `Users > service user > Permissions > Attach Policy`
+ * Attach `AmazonEC2FullAccess` and `AmazonEC2ContainerServiceFullAccess`
+
+4. Install the AWS CLI (2 options)
  * [AWS CLI Global Installation](http://docs.aws.amazon.com/cli/latest/userguide/installing.html)
  * Install AWS CLI in a Python virtual environment (recommended):
     * Install pip (python package manager)
@@ -31,15 +42,15 @@ Files and folders from the base2solutions DevOps repository utilized in the Jenk
       * To reactivate change directory into `jenkins-env` and do `source bin/activate`
       * More info on `virtualenv` [here](https://virtualenv.pypa.io/en/stable/).
 
-3. Configure the AWS CLI.
+5. Configure the AWS CLI.
    * Do `aws configure`. If you are using `virtualenv`, do `aws configure` from within the virtual environment where `aws cli` was installed.
-   * input your AWS Access Key ID
+   * input your (not the service user) AWS Access Key ID
    * input your AWS Secret Access Key
    * input your default region name, e.g. `us-west-2`
    * input `json` as the Default output format
    * [more info here.](http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html#cli-quick-configuration)
 
-4. Create an Amazon EC2 Key Pair.
+6. Create an Amazon EC2 Key Pair.
   * change directory to `/Users/<user name>/.ssh/`
   * do `aws ec2 create-key-pair --key-name <AWS key pair name> --query "KeyMaterial" --output text > <AWS key pair name>.pem`
   * do `chmod 700 <AWS key pair name>.pem`
@@ -53,7 +64,7 @@ For more information on the aws-cli Python package checkout their [GitHub reposi
  * Clone the DevOps repository:  
  `git clone https://github.com/base2solutions/DevOps.git`
  * Visit `Packer/conf/jenkins.conf` and replace the lines `<server url here>` with your server url.
- * Modify `baseJenkinsEc2.json` (the Packer template) as necessary.
+ * Modify `baseJenkinsEc2.json` (the Packer template) [Needs explanation]
 
  * Start Packer Build process:  
  `packer build path/to/baseJenkinsEC2.json`
@@ -112,12 +123,11 @@ Export these keys and do `packer build path/to/baseJenkinsEC2.json` again.
   * Review and Launch.
   * Select the EC2 Key Pair create in `Step 1: Set Up with AWS CLI`
 
-### Step 3: Configure Jenkins
-#### Route 53
+### Step 3: Configure Route 53
 Use [Amazon Route 53](https://aws.amazon.com/route53/) to create Public and Private Hosted Zones. Public Hosted Zone will provide DNS name resolution for your Jenkins when it is accessed via the internet. Private Hosted Zone will provide DNS name resolution for Jenkins when it is accessed by other servers within the same Amazon VPC.
 
  * On AWS, select Services > Route 53 > Hosted zones  
- * New Domain & Record Sets:
+ * Follow these steps to add a new Domain & Record Sets:
    * Select `Create Hosted Zone` and create a Public Hosted Zone:  
      * Domain name: e.g. `myjenkinsdomainname.com`
      * Comment: some/comment/here  
@@ -139,9 +149,33 @@ Use [Amazon Route 53](https://aws.amazon.com/route53/) to create Public and Priv
      * Value: enter the private ip of the the Jenkins EC2 instance.  
      * Select `Create`
 
-* Modifying existing Route 53 configuration:
+* Follow these steps to modify existing Route 53 configurations:
     * Replace old Public & Private IP addresses with that of your Jenkins EC2 instance.
 
+### Step 4: Configure GitHub
+#### GitHub - Repository webhook  
+ * your organization > repository > Settings  
+ * Select Webhooks & services  
+ * Select `Add webhook`:  
+   * Payload URL: <Jenkins record set domain>/ghprbhook/  
+   * Content type: application/x-www-form-urlencoded  
+   * Which events would you like to trigger this webhook? > select `Let me select individual events` and tick the following options:
+   ```  
+   Pull request  
+   Member  
+   Issue comment  
+   ```
+   * At the bottom, select `ACTIVE` and Click `Add webhook`  
+
+#### GitHub - OAuth Applications  
+ * Select your user icon > settings
+ * Select OAuth applications > Register a new application:  
+ * Application name: enter application name here  
+ * Homepage URL: <Jenkins record set domain>  
+ * Application descriptions: some descriptions
+ * Authorized callback URL: `https://<Jenkins record set domain>/securityRealm/finishLogin` or URL/where/user/access/Jenkins  
+
+### Step 5: Configure Jenkins
 #### Nginx
  * SSH into the newly created Jenkins instance
 
@@ -165,9 +199,10 @@ Use [Amazon Route 53](https://aws.amazon.com/route53/) to create Public and Priv
 
 #### Initial Jenkins Login   
  * Using a web browser, navigate to the Jenkins instance url.
- * While ssh'd in to your Jenkins instance, do `sudo su` and `cat /var/lib/jenkins/secrets/initialAdminPassword`
+ * While ssh'd in to the Jenkins instance, do `sudo su` and `cat /var/lib/jenkins/secrets/initialAdminPassword`. The output is the initial Jenkins password.
+ * Copy the output and use it to log in to Jenkins.
  * Log in using the password created in `/var/lib/jenkins/secrets/initialAdminPassword`  
- * Select to install most recommended plugins  
+ * Install most recommended plugins  
  * Create a local admin account  
 
 #### Manage Jenkins Plugins  
@@ -180,7 +215,7 @@ Use [Amazon Route 53](https://aws.amazon.com/route53/) to create Public and Priv
  >     GitHub Authentication plugin  
  >     GitHub Pull Request Builder  
  * Click `Download now and install after restart` > the installation will start   
- * Afterward, tick `Restart Jenkins when installation is complete and no jobs are running`.  
+ * Select `Restart Jenkins when installation is complete and no jobs are running`.  
 
 #### Configure Jenkins Global Security  
  * Click Manage Jenkins > click Configure Global Security  
@@ -222,35 +257,6 @@ Use [Amazon Route 53](https://aws.amazon.com/route53/) to create Public and Priv
  * Click save  
  **NOTE**: Amazon ECS credentials must be created beforehand on AWS Console - IAM section
 
-### Configure GitHub and Amazon AWS credentials:
-#### GitHub - Repository webhook  
- * your organization > repository > Settings  
- * Select Webhooks & services  
- * Select `Add webhook`:  
-   * Payload URL: <Jenkins record set domain>/ghprbhook/  
-   * Content type: application/x-www-form-urlencoded  
-   * Which events would you like to trigger this webhook? > select `Let me select individual events` and tick the following options:
-   ```  
-   Pull request  
-   Member  
-   Issue comment  
-   ```
-   * At the bottom, select `ACTIVE` and Click `Add webhook`  
-
-#### GitHub - OAuth Applications  
- * Select your user icon > settings
- * Select OAuth applications > Register a new application:  
- * Application name: enter application name here  
- * Homepage URL: <Jenkins record set domain>  
- * Application descriptions: some descriptions
- * Authorized callback URL: `https://<Jenkins record set domain>/securityRealm/finishLogin` or URL/where/user/access/Jenkins  
-
-#### AWS - IAM  
- * Sign into AWS Console > click Services > click IAM  
- * Click Users > select the service user  
- * In `Security Credentials`, click on Create Access Key [use for AWS instance deployment]  
- * In Permissions tab, click Attach Policy > select the Policy you want to attach to this user account  
- * Click Attach Policy  
 
 ### Backup Jenkins Using AWS Lambda:
 #### Overview  
