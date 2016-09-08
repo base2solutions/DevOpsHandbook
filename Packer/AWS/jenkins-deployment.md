@@ -142,12 +142,12 @@ example:
 
 ##### Builders Parameter Options
 3 Options for defining variables / configuring builders parameters.
-
 Choose the option that makes sense for your project.
+Option 3. would not be appropriate for templates stored in public repositories but is fine for private repositories.
 
-Option 3 would not be appropriate for storing your template in a public repository.
+After choosing your method, reference the `Variable Guide` to help identify your variables/builders parameters.
 
-a. Set variables from the command line during packer build:
+Option 1. Set variables from the command line during packer build:
 ```
 packer build \
 -var 'aws_region=us-west-1' \
@@ -155,7 +155,7 @@ packer build \
 baseJenkinsEC2.json
 ```
 
-b. Set variables in an external JSON file:
+Option 2. Set variables in an external JSON file:
 ```
 {
   "aws_access_key": "foo",
@@ -165,9 +165,9 @@ b. Set variables in an external JSON file:
 ```
 Then do `packer build -var-file=variables.json baseJenkinsEC2.json`
 
-c. Replace with real values
+Option 3. Replace with real values.
  * Delete all variables except for `aws_access_key` and `aws_secret_key`
- * Replace all `{{ user aws_stuff_here }}` template variable references except the `aws_access_key` and `aws_secret_key`:
+ * Replace all `{{ user aws_stuff_here }}` template variable references except the `{{ user aws_access_key }}` and `{{ user aws_secret_key }}`:
 
 ```
  {
@@ -186,10 +186,17 @@ c. Replace with real values
  }
 ```
 
+Then do `packer build path/to/baseJenkinsEC2.json`
 #### Packer AMI Build
+ * Identify Variable & Builders Parameters method and gather necessary parameters.
  * Visit `Packer/conf/jenkins.conf` and replace the lines `<server url here>` with your server url.
- * Start Packer Build process:  
- `packer build path/to/baseJenkinsEC2.json`
+ * Start Packer Build process with your preferred method:
+
+ `packer build \ -var 'aws_region=us-west-1' \ -var ...etc.` (Option 1)
+
+ `packer build -var-file=variables.json path/to/baseJenkinsEC2.json` (Option 2)
+ 
+ `packer build path/to/baseJenkinsEC2.json` (Option 3)
  * Once the build process has been completed, sign into Amazon AWS Console
 
 ##### Troubleshooting
