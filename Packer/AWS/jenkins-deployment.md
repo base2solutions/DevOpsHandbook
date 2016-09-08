@@ -6,7 +6,7 @@ To begin you need a url for your server, an [AWS](https://aws.amazon.com/) accou
 #### Utilized Files & Folders:
 Files and folders from the base2solutions DevOps repository utilized in the Jenkins Packer deployment.
 
-`Packer/AWS/baseJenkinsEC2.json` - [amazon-ebs Packer template](https://www.packer.io/docs/builders/amazon-ebs.html). Creates an [AMI](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html) on your AWS account from which an AWS EC2 instance will be launched.
+`Packer/AWS/baseJenkinsEC2.json` - The [Packer Template](https://www.packer.io/docs/templates/introduction.html). Packer templates are JSON files that configure Packer in order to create machine images. This [amazon-ebs](https://www.packer.io/docs/builders/amazon-ebs.html) Packer templste creates an [AMI](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html) on your AWS account from which an AWS EC2 instance will be launched.
 
 `Packer/AWS/jenkins.sh` - Script that installs Java, Docker, Nginx, Git, and Jenkins.
 
@@ -61,7 +61,7 @@ For more information on the aws-cli Python package checkout their [GitHub reposi
 
 1. Create a [VPC](http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/getting-started-create-vpc.html)
 2. Create a Subnet
-  * `Services > VPC > Subnets > Create Subnet`
+  * From the AWS Console navigate to `Services > VPC > Subnets > Create Subnet`
   * Associate it with the VPC you created
   * Select your Availability Zone
   * Input a Subnet CIDR block with the same IP as your VPC but with a different netmask.
@@ -90,14 +90,102 @@ All traffic         All                All               0.0.0.0/0
  Clone the base2solutions DevOps repository:
 `git clone https://github.com/base2solutions/DevOps.git`
 
-1. Modify the Packer Template
+#### Modify the Packer Template
 
-[Packer Templates](https://www.packer.io/docs/templates/introduction.html) are JSON files that configure Packer in order to create machine images.
+  The `baseJenkinsEc2.json` Packer template is composed of:
+* [variables](https://www.packer.io/docs/templates/user-variables.html)
+* [builders](https://www.packer.io/docs/templates/builders.html)
+* [provisioners](https://www.packer.io/docs/templates/provisioners.html)
 
+Variables allow us the ability to keep secret tokens and other configuration data out of our Packer template.
+
+##### Variable Guide
+Variables used in the `baseJenkinsEC2.json` template:
+```
+"variables": {                      // variable descriptions below
+    "ssh_username": "",             // create a username to ssh into your EC2 instance with.
+    "aws_instance_type": "",        // EC2 instance type e.g. t2.nano, t2.micro, etc.
+    "aws_region": "",               // location where your EC2 is hosted e.g. us-east-1, eu-central-1, etc.
+"aws_access_key": "",               // aws access key stored in ~/.aws/credentials
+"aws_secret_key": "",               // aws secret key stored in ~/.aws/credentials
+    "aws_source_ami": "",           // Amazon Machine Image (AMI) reference ID e.g. input ami-7172b611 for Amazon Linux, ami-775e4f16 for Red Hat Enterprise Linux, etc.
+    "aws_subnet_id": "",            // Subnet ID of the Subnet we created earlier e.g. subnet-lskdjf99
+    "aws_vpc_id": "",               // VPC ID of the VPC created earlier e.g. vpc-fjlk239333
+    "aws_security_group_id":"",     // Security Group ID created earlier e.g. sg-lksdjfkl88
+    "aws_ami_name": "",             // create a name for your AMI
+    "aws_ami_users": ""             // numeric part of your AWS User ARN. visit AWS > IAM > Users > your username > User ARN:  arn:aws:iam::<the digits here>::user/user-name
+}
+```
+
+##### Variables and Builders Parameters
+
+Variables are used for builders parameters in the Packer template.
+example:
+
+```
+{
+  "variables": {
+    "aws_instance_type": "",
+    "aws_region": "",
+    "aws_access_key": "",
+    "aws_secret_key": ""
+  },
+
+  "builders": [{
+    "access_key": "{{user `aws_access_key`}}",
+    "secret_key": "{{user `aws_secret_key`}}",
+  	"instance_type": "{{user `aws_instance_type`}}",
+  	"region": "{{user `aws_region`}}"
+  }]
+}
+```
+
+##### Builders Parameter Options
+3 Options for defining variables / configuring builders parameters.
+
+Choose the option that makes sense for your project.
+
+Option 3 would not be appropriate for storing your template in a public repository.
+
+1. Set variables from the command line during packer build:
+ ```packer build \
+    -var 'aws_region=us-west-1' \
+    -var 'aws_instance_type=t2.micro' \
+    baseJenkinsEC2.json
+ ```
+
+2. Set variables in an external JSON file:
+```
+{
+  "aws_access_key": "foo",
+  "aws_secret_key": "bar",
+  "aws_instance_type": "t2.micro"
+}
+```
+ * Do `packer build -var-file=variables.json baseJenkinsEC2.json`
+
+3. Replace with real values
+ * Delete all variables except for `aws_access_key` and `aws_secret_key`
+ * Replace all `{{ user aws_stuff_here }}` template variable references except the `aws_access_key` and `aws_secret_key`:
+ ```
+ {
+   "variables": {
+     "aws_access_key": "",
+     "aws_secret_key": ""
+   },
+
+   "builders": [{
+     "type": "amazon-ebs",
+     "access_key": "{{user `aws_access_key`}}",
+     "secret_key": "{{user `aws_secret_key`}}",
+   	"instance_type": "t2.micro",
+   	"region": "us-west-1"
+   }]
+ }
+```
+
+#### Packer AMI Build
  * Visit `Packer/conf/jenkins.conf` and replace the lines `<server url here>` with your server url.
-
-
-2. Packer AMI Build
  * Start Packer Build process:  
  `packer build path/to/baseJenkinsEC2.json`
  * Once the build process has been completed, sign into Amazon AWS Console
@@ -122,7 +210,7 @@ Export your AWS Access Key and Access Key ID like so from your terminal:
 
 Export these keys and do `packer build path/to/baseJenkinsEC2.json` again.
 
-3. Launch EC2 instance from AMI
+#### Launch EC2 instance from AMI
  * From the AWS Console, select `EC2`
  * Under Images, select `AMIs`
  * Select the newly created AMI and hit `Launch`:
