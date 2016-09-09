@@ -410,58 +410,59 @@ Use [Amazon Route 53](https://aws.amazon.com/route53/) to create Public and Priv
    * In the text box below, copy and paste lines below:  
 
    ```
-   python
    import boto3
    import collections
    import datetime
 
    ec = boto3.client('ec2')
+
    def lambda_handler(event, context):
-   reservations = ec.describe_instances(
-       Filters=[
-           {'Name': 'tag-key', 'Values': ['Backup', 'backup']},
-           {'Name': 'tag-value', 'Values': ['True','true']},
-           ]
-       ).get('Reservations', [])
+       reservations = ec.describe_instances(
+           Filters=[
+               {'Name': 'tag-key', 'Values': ['Backup', 'backup']},
+               {'Name': 'tag-value', 'Values': ['True','true']},
+           ]).get('Reservations', [])
 
-   instances = sum([
-       [i for i in instance['Instances']]
-       for instance in reservations
-       ], [])
+       instances = sum(
+           [
+               [i for i in instance['Instances']]
+               for instance in reservations
+           ], [])
 
-   print "Found %d instances that need backing up" % len(instances)
+       print "Found %d instances that need backing up" % len(instances)
 
-   to_tag = collections.defaultdict(list)
+       to_tag = collections.defaultdict(list)
 
-   for instance in instances:
-         try:
-             retention_days = [
-                 int(t.get('Value')) for t in instance['Tags']
-                if t['Key'] == 'Retention'][0]
-          except IndexError:
-              retention_days = 5
+       for instance in instances:
+           try:
+               retention_days = [
+                   int(t.get('Value')) for t in instance['Tags']
+                   if t['Key'] == 'Retention'][0]
+           except IndexError:
+               retention_days = 5
 
-          for dev in instance['BlockDeviceMappings']:
-              if dev.get('Ebs', None) is None:
-                  continue
+       for dev in instance['BlockDeviceMappings']:
+           if dev.get('Ebs', None) is None:
+               continue
+           vol_id = dev['Ebs']['VolumeId']
+           print "Found EBS volume %s on instance %s" % (
+           vol_id, instance['InstanceId'])
 
-              vol_id = dev['Ebs']['VolumeId']
-              print "Found EBS volume %s on instance %s" % (vol_id, instance['InstanceId'])
-              snap = ec.create_snapshot(VolumeId=vol_id)
+           snap = ec.create_snapshot(VolumeId=vol_id,)
 
-              to_tag[retention_days].append(snap['SnapshotId'])
+           to_tag[retention_days].append(snap['SnapshotId'])
 
-              print "Retaining snapshot %s of volume %s from instance %s for %d days" % (
-                  snap['SnapshotId'], vol_id, instance['InstanceId'], retention_days)
+           print "Retaining snapshot %s of volume %s from instance %s for %d days" % (
+               snap['SnapshotId'], vol_id, instance['InstanceId'], retention_days,)
 
-          for retention_days in to_tag.keys():
-              delete_date = datetime.date.today() + datetime.timedelta(days=retention_days)
-              delete_fmt = delete_date.strftime('%Y-%m-%d')
-              print "Will delete %d snapshots on %s" % (len(to_tag[retention_days]), delete_fmt)
-              ec.create_tags(
-                  Resources=to_tag[retention_days],
-                  Tags=[{'Key': 'DeleteOn', 'Value': delete_fmt}]
-                  )
+       for retention_days in to_tag.keys():
+           delete_date = datetime.date.today() + datetime.timedelta(days=retention_days)
+           delete_fmt = delete_date.strftime('%Y-%m-%d')
+           print "Will delete %d snapshots on %s" % (len(to_tag[retention_days]), delete_fmt)
+           ec.create_tags(
+               Resources=to_tag[retention_days],
+               Tags=[{'Key': 'DeleteOn', 'Value': delete_fmt}]
+               )
    ```
    * Handler: default is `lambda_function.lambda_handler`  
    * Role: Choose an existing role  
@@ -490,15 +491,15 @@ Use [Amazon Route 53](https://aws.amazon.com/route53/) to create Public and Priv
    * In the text box below, copy and paste lines below:  
 
    ```
-   python
    import boto3
    import re
    import datetime
 
    ec = boto3.client('ec2')
    account_id = ['<aws_account_id_here>']
+
    def lambda_handler(event, context):
-   delete_on = datetime.date.today().strftime('%Y-%m-%d')
+       delete_on = datetime.date.today().strftime('%Y-%m-%d')
        filters = [
            {'Name': 'tag-key', 'Values': ['DeleteOn']},
            {'Name': 'tag-value', 'Values': [delete_on]},
