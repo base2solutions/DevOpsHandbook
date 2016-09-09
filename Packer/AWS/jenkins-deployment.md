@@ -360,7 +360,7 @@ Use [Amazon Route 53](https://aws.amazon.com/route53/) to create Public and Priv
  >    Name: name_of_ecs_cloud
  >    Amazon ECS Credentials: select service account with access permission to ECS cluster  
  >    Amazon ECS Region Name: select region where the ECS cluster is located  
- >    click Advanced > In Alternative Jenkins URL > enter "<Jenkins record set domain>" here
+ >    click Advanced > In Alternative Jenkins URL > enter your Jenkins url.
 
  * Locate ECS slave templates > click Add > Enter the following:  
  >    Label: enter name which will be used to reference to this slave  
