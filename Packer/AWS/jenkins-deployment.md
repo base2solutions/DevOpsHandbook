@@ -218,7 +218,7 @@ Export your AWS Access Key and Access Key ID like so from your terminal:
 
 `export AWS_SECRET_ACCESS_KEY=<secret key here>`
 
-Export these keys and do `packer build path/to/baseJenkinsEC2.json` again.
+Export these keys and do `packer build` again.
 
 #### Launch EC2 instance from AMI
  * From the AWS Console, select `EC2`
