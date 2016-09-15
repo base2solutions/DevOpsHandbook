@@ -3,6 +3,8 @@ A guide to deploying and configuring Jenkins with GitHub authentication on an AW
 
 To begin you need a url for your server, an [AWS](https://aws.amazon.com/) account, and a [Github ](https://github.com/) account.
 
+You will need to a GitHub account for your service user as well. Add this user to your GitHub organization as an owner.
+
 #### Utilized Files & Folders:
 Files and folders from the base2solutions DevOps repository utilized in the Jenkins Packer deployment.
 
@@ -268,6 +270,8 @@ Use [Amazon Route 53](https://aws.amazon.com/route53/) to create Public and Priv
     * Replace old Public & Private IP addresses with that of your Jenkins EC2 instance.
 
 ### Step 5: Configure GitHub
+Login to GitHub the service user's credentials.
+
 #### GitHub - Repository webhook  
  * your organization > repository > Settings  
  * Select Webhooks & services  
@@ -283,7 +287,7 @@ Use [Amazon Route 53](https://aws.amazon.com/route53/) to create Public and Priv
    * At the bottom, select `ACTIVE` and Click `Add webhook`  
 
 #### GitHub - OAuth Applications  
- * Select your user icon > settings
+ * Select the user icon > settings
  * Select OAuth applications > Register a new application:  
  * Application name: enter application name here  
  * Homepage URL: <Jenkins record set domain>  
@@ -348,7 +352,7 @@ Use [Amazon Route 53](https://aws.amazon.com/route53/) to create Public and Priv
  >     Participant in Organization: enter organization name here  
  >     Use GitHub repository permissions: yes  
  * Click Save  
- **NOTE**: Client ID and secret needs to be generate beforehand on GitHub - OAuth applications  
+
 
 #### Jenkins Configure System  
  * Click Manage Jenkins > click on Configure System  
@@ -370,7 +374,7 @@ Use [Amazon Route 53](https://aws.amazon.com/route53/) to create Public and Priv
  >    CPU units: 1  
 
  * Click save  
- **NOTE**: Amazon ECS credentials must be created beforehand on AWS Console - IAM section
+ 
 
 
 ### Backup Jenkins Using AWS Lambda:
