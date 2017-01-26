@@ -17,18 +17,18 @@
     node {
       checkout scm              // Checks out the GitHub branch that is being built.
       parallel(                 // Parallel blocks allow you to run tasks in parallel. Here we build our app UI and backend simultaneously.
-        "Build UI": {
-          sh '''#!/bin/bash -l
-                npm install
-                grunt build:all
-             '''                  // Multi-line script syntax uses '''.
-          stash includes: 'web/', name: 'build_ui' // Stashing folder created by build_ui.sh to use in later stage.
-        },
-        "Build App": {
-          sh 'echo Building App'
-          sh './build_app.sh'    // Running a build_app.sh that's at the repo root.
-          stash includes: 'app/', name: 'build_app' //// Stashing folder created by build_app.sh to use in later stage.
-         }
+            "Build UI": {
+              sh '''#!/bin/bash -l
+                    npm install
+                    grunt build:all
+                 '''                  // Multi-line script syntax uses '''.
+              stash includes: 'web/', name: 'build_ui' // Stashing folder created by build_ui.sh to use in later stage.
+            },
+            "Build App": {
+              sh 'echo Building App'
+              sh './build_app.sh'    // Running a build_app.sh that's at the repo root.
+              stash includes: 'app/', name: 'build_app' //// Stashing folder created by build_app.sh to use in later stage.
+             }
         )
 
     }
