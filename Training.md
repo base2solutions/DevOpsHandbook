@@ -20,12 +20,18 @@ Our typical ops-focused technology stack. A foundational understanding of these 
 
 ### DevOps 201
 
-Once you have the basics down, explore these next technology stacks.
+Once you have the basics down, explore these tools
 
- * [Ansible] - Infrastructure automation
+ * [Docker Datacenter/Enterprise Edition] - Container runtime
+   * [Docker UCP] - Universal Control Plane
+   * [Docker Swarm] - Container Orchestration
+   * [Kubernetes]: - Container Orchestration
  * [Robot Framework] - Integration and Functional Test Automation
- * [Packer] - Machine and container images
+ * [Packer] - Machine and container image manufacturing
 
-[Ansible]: <https://www.ansible.com/how-ansible-works>
+[Docker Datacenter/Enterprise Edition]: <https://www.docker.com/enterprise-edition>
+[Docker UCP]: <https://docs.docker.com/datacenter/ucp/2.2/guides/>
+[Docker Swarm]: <https://docs.docker.com/engine/swarm/>
+[Kubernetes]: <https://kubernetes.io/docs/user-guide/walkthrough/>
 [Robot Framework]: <http://robotframework.org/>
 [Packer]: <https://www.packer.io/>
