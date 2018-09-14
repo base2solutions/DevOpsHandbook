@@ -12,7 +12,7 @@ Our typical ops-focused technology stack. A foundational understanding of these 
 * [Jenkins] - Continuous Integration
 * [AWS] - Amazon Web Services
 
-[Docker]: <https://training.docker.com/self-paced-training>
+[Docker]: <https://training.play-with-docker.com/>
 [Vagrant]: <https://www.vagrantup.com/docs/getting-started/>
 [Git]: <https://try.github.io/levels/1/challenges/1>
 [Jenkins]: <https://jenkins.io/doc/>
